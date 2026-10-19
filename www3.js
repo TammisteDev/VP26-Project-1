@@ -18,7 +18,7 @@ http.createServer(function(req, res){
     let currentURL = url.parse(req.url, true);
     console.log('Parsituna: ' + currentURL.pathname);
     if (currentURL.pathname === '/'){
-        res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'}); 
+        res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
         //res.write('Veebiserver Käivitus');
         res.write(pageHead);
         res.write(pageBanner)
@@ -29,28 +29,37 @@ http.createServer(function(req, res){
         }
 
         else if (currentURL.pathname === '/vanasona'){
-                    res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'}); 
-        //res.write('Veebiserver Käivitus');
-        res.write('\t<h1>Tänane Eesti vanasõna</h1>\n\t<p>Siin näed tänaseks päevaks loositud vanasõna. </p>\n\t<hr>')
-        res.write(pageHead);
-        res.write(pageFoot);
-        return res.end();
-
+            res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'});
+            res.write(pageHead);
+            res.write('<h1>Tänane Eesti vanasõna</h1><p>Siin näed tänaseks päevaks loositud vanasõna.</p><hr>');
+            try {
+                const data = fs.readFileSync(path.join(__dirname, 'txt', 'vanasonad.txt'), 'utf8');
+                let oldSayings = data.split(';').filter(function(saying){
+                    return saying.trim() !== '';
+                });
+                let saying = oldSayings[Math.floor(Math.random() * oldSayings.length)];
+                res.write('<p>' + saying + '</p>');
+            } catch (err) {
+                res.write('<p>Vanasõna ei leitud.</p>');
+            }
+            res.write(pageFoot);
+            return res.end();
         }
         else if (currentURL.pathname === '/pilt.png'){
             // liidame kättesaamatu päris kataloog jms virtuaalseks failiteeks
-            let bannerPath = path.join(__dirname, 'pic', currentURL.pathname);
+            let bannerPath = path.join(__dirname, 'pic', 'pilt.png');
             try {
-                    const data = fs.readFile(bannerPath);
+                    const data = fs.readFileSync(bannerPath);
                     res.writeHead(200, {"Content-type": "image/png"})
                     return res.end(data)
             }   catch (err) {
-                        res.writeHead(400, {"Content-type": "text/plain; charset-utf8"});
+                        res.writeHead(404, {"Content-type": "text/plain; charset=utf-8"});
                         return res.end('Pilti ei leitud')
-                } 
+                }
         }
 
         else {
+            res.writeHead(404, {'Content-Type': 'text/plain; charset=utf-8'});
             return res.end('Viga 404! Ei leia sellist lehte!');
         }
 }).listen(5205);
